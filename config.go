@@ -11,9 +11,9 @@ import (
 
 var conf_fn = "conf.json"
 
-const app_name	string="App Name: nav"
+const app_name	string="App Name: dogu"
 
-const app_descr	string="Descr: kernel symbol navigator"
+const app_descr	string="Descr: 道具はHTTPでものを転送する"
 
 type Arg_func func(*configuration, []string) (error)
 
@@ -40,7 +40,7 @@ type configuration struct {
 var	Default_config  configuration = configuration{
 	Host:		"https://localtunnel.me",
 	Target:		"localhost",
-	Request_dom:	"antani",
+	Request_dom:	"",
 	Port:		8080,
 	cmdlineNeeds:   map[string] bool{},
 	}

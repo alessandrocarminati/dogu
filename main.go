@@ -2,7 +2,7 @@ package main
 
 import (
 	"net/http"
-//	"log"
+	"strconv"
 	"strings"
 	"os/exec"
 	"os"
@@ -22,7 +22,7 @@ var (
 func HelloServer(w http.ResponseWriter, req *http.Request) {
 	log=append(log,"HelloServer ")
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("This is an example server.\n"))
+	w.Write([]byte("Service is alive.\n"))
 }
 
 func cmd_foreground(w http.ResponseWriter, req *http.Request){
@@ -129,6 +129,7 @@ func main() {
 	mux := http.NewServeMux()
 	fileServer := http.FileServer(http.Dir("./"))
 	mux.Handle("/f/", http.StripPrefix("/f", fileServer))
+	mux.HandleFunc("/", HelloServer)
 	mux.HandleFunc("/hello", HelloServer)
 	mux.HandleFunc("/cmd_fore", cmd_foreground)
 	mux.HandleFunc("/cmd_back", cmd_background)
@@ -136,7 +137,7 @@ func main() {
 	mux.HandleFunc("/upd_script", upd_script)
 	mux.HandleFunc("/getlog", getlog)
 
-	err = http.ListenAndServe(":8080", mux)
+	err = http.ListenAndServe(":"+strconv.Itoa(conf.Port), mux)
 //    err := http.ListenAndServeTLS(":443", "server.crt", "server.key", nil)
 	if err != nil {
 		panic("ListenAndServe: ")
