@@ -16,6 +16,7 @@ If another go supported target is needed, GOLANG env variables can be overridden
 $ make GOOS=windows
 GOARCH="amd64" GOOS=windows go build
 ```
+
 # usage
 Dogu supports a few command line switches:
 ```
@@ -30,6 +31,25 @@ Descr: kernel symbol navigator
 ```
 Only the `-r` switch is mandatory, and it is needed to specify the base URL for the service:
 Default values:
-Host:"https://localtunnel.me"
-Target:"localhost"
-Port:8080
+| field  | Value                  |
++--------|------------------------|
+| Host   | https://localtunnel.me |
+| Target | localhost              |
+| Port   | 8080                   |
+
+# http commands
+All commands are sent using the `GET` verb easing its usage from commandline.
+Targeted usage is something like:
+```
+$ wget -O - -q "https://example.loca.lt/hello"
+Service is alive.
+```
+| function   | args | arg strings | description                                                                      |
++------------+------+-------------+----------------------------------------------------------------------------------+
+| hello      | 0    |             | Sends back a hello string                                                        |
+| cmd_fore   | 1    | cmd         | Executes a command in foreground                                                 |
+| cmd_back   | 1    | cmd         | Executes a command in background                                                 |
+| cmd_backc  | 0    |             | Returns the output for the last background command                               |
+| upd_script | 2    | name, b64pl | Uploads a script/executable sets execution flag, might not suite for windows env |
+| getlog     | 0    |             | Return the list of the commands received                                         |
+
