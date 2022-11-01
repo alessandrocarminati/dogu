@@ -6,12 +6,16 @@ import (
 	"strings"
 	"os/exec"
 	"os"
+	"fmt"
 	b64 "encoding/base64"
+	lt "github.com/jweslley/localtunnel"
 )
 
-var outbg []byte
-var busy bool = false
-var log []string;
+var (
+	outbg []byte
+	busy bool = false
+	log []string;
+)
 
 
 
@@ -101,6 +105,27 @@ func getlog(w http.ResponseWriter, req *http.Request){
 
 
 func main() {
+/*
+	conf_host:="https://localtunnel.me"
+	conf_local:="localhost"
+	conf_subdomain:="antani"
+	conf_port:=8080
+*/
+
+	conf, err := args_parse(cmd_line_item_init())
+	if err!=nil {
+		if err.Error() != "dummy"{
+			fmt.Println(err.Error())
+			}
+		print_help(cmd_line_item_init());
+		os.Exit(-1)
+		}
+
+	c := lt.NewClient(conf.Host)
+	t := c.NewTunnel(conf.Target, conf.Port)
+	t.OpenAs(conf.Request_dom)
+	fmt.Printf("your url is: %s\n", t.URL())
+
 	mux := http.NewServeMux()
 	fileServer := http.FileServer(http.Dir("./"))
 	mux.Handle("/f/", http.StripPrefix("/f", fileServer))
@@ -111,7 +136,7 @@ func main() {
 	mux.HandleFunc("/upd_script", upd_script)
 	mux.HandleFunc("/getlog", getlog)
 
-	err := http.ListenAndServe(":8080", mux)
+	err = http.ListenAndServe(":8080", mux)
 //    err := http.ListenAndServeTLS(":443", "server.crt", "server.key", nil)
 	if err != nil {
 		panic("ListenAndServe: ")
