@@ -49,12 +49,12 @@ $ wget -O - -q "https://example.loca.lt/hello"
 Service is alive.
 ```
 
-| function   | args | arg strings | description                                                                      |
-|------------|------|-------------|----------------------------------------------------------------------------------|
-| hello      | 0    |             | Sends back a hello string                                                        |
-| cmd_fore   | 1    | cmd         | Executes a command in foreground                                                 |
-| cmd_back   | 1    | cmd         | Executes a command in background                                                 |
-| cmd_backc  | 0    |             | Returns the output for the last background command                               |
-| upd_script | 2    | name, b64pl | Uploads a script/executable sets execution flag, might not suite for windows env |
-| getlog     | 0    |             | Return the list of the commands received                                         |
+| function   | args | arg strings | description                                                                 |
+|------------|------|-------------|-----------------------------------------------------------------------------|
+| hello      | 0    |             | Sends back a hello string                                                   |
+| cmd_fore   | 1    | cmd         | Executes a command in foreground                                            |
+| cmd_back   | 1    | cmd         | Executes a command in background                                            |
+| cmd_backc  | 0    |             | Returns the output for the last background command                          |
+| upd_script | 2    | name, b64pl | Uploads a script/executable sets execution flag, payload is meant in base64 |
+| getlog     | 0    |             | Return the list of the commands received                                    |
 

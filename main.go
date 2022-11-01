@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os"
 	"fmt"
+	"runtime"
 	b64 "encoding/base64"
 	lt "github.com/jweslley/localtunnel"
 )
@@ -87,7 +88,11 @@ func upd_script(w http.ResponseWriter, req *http.Request){
 				log=append(log,"upd_script write:"+err.Error())
 				out=string(err.Error())
 				}else {
-					if err := os.Chmod(name, 0777); err != nil {
+					var err error
+					if runtime.GOOS != "windows" {
+						err = os.Chmod(name, 0777);
+						}
+					if err != nil {
 						log=append(log,"upd_script chmod:"+err.Error())
 						out=string(err.Error())
 						}
