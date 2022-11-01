@@ -30,22 +30,27 @@ Descr: kernel symbol navigator
 	-j	<v>	Specifies config file
 ```
 Only the `-r` switch is mandatory, and it is needed to specify the base URL for the service:
+
 Default values:
+
 | field  | Value                  |
-+--------|------------------------|
+|--------|------------------------|
 | Host   | https://localtunnel.me |
 | Target | localhost              |
 | Port   | 8080                   |
 
 # http commands
 All commands are sent using the `GET` verb easing its usage from commandline.
+
 Targeted usage is something like:
+
 ```
 $ wget -O - -q "https://example.loca.lt/hello"
 Service is alive.
 ```
+
 | function   | args | arg strings | description                                                                      |
-+------------+------+-------------+----------------------------------------------------------------------------------+
+|------------|------|-------------|----------------------------------------------------------------------------------|
 | hello      | 0    |             | Sends back a hello string                                                        |
 | cmd_fore   | 1    | cmd         | Executes a command in foreground                                                 |
 | cmd_back   | 1    | cmd         | Executes a command in background                                                 |
