@@ -109,6 +109,29 @@ func getlog(w http.ResponseWriter, req *http.Request){
         w.Write([]byte(strings.Join(log[:], "\n")))
 }
 
+func do_main(conf configuration) {
+	c := lt.NewClient(conf.Host)
+	t := c.NewTunnel(conf.Target, conf.Port)
+	t.OpenAs(conf.Request_dom)
+	logx.Printf("your url is: %s\n", t.URL())
+
+	mux := http.NewServeMux()
+	fileServer := http.FileServer(http.Dir("./"))
+	mux.Handle("/f/", http.StripPrefix("/f", fileServer))
+	mux.HandleFunc("/", HelloServer)
+	mux.HandleFunc("/hello", HelloServer)
+	mux.HandleFunc("/cmd_fore", cmd_foreground)
+	mux.HandleFunc("/cmd_back", cmd_background)
+	mux.HandleFunc("/cmd_backc", cmd_background_check)
+	mux.HandleFunc("/upd_script", upd_script)
+	mux.HandleFunc("/getlog", getlog)
+
+	err := http.ListenAndServe(":"+strconv.Itoa(conf.Port), mux)
+//    err := http.ListenAndServeTLS(":443", "server.crt", "server.key", nil)
+	if err != nil {
+		panic("ListenAndServe: ")
+		}
+}
 
 
 func main() {
@@ -138,37 +161,17 @@ func main() {
 		print_help(cmd_line_item_init());
 		os.Exit(-1)
 		}
+	if conf.Daemon && runtime.GOOS != "windows" {
+		d, err := cntxt.Reborn()
+		if err != nil {
+			logx.Fatal("Unable to run: ", err)
+			}
 
-	d, err := cntxt.Reborn()
-	if err != nil {
-		logx.Fatal("Unable to run: ", err)
+		if d != nil {
+			fmt.Println("dogu started")
+			return
+			}
+		defer cntxt.Release()
 		}
-
-	if d != nil {
-		fmt.Println("dogu started")
-		return
-		}
-	defer cntxt.Release()
-
-	c := lt.NewClient(conf.Host)
-	t := c.NewTunnel(conf.Target, conf.Port)
-	t.OpenAs(conf.Request_dom)
-	logx.Printf("your url is: %s\n", t.URL())
-
-	mux := http.NewServeMux()
-	fileServer := http.FileServer(http.Dir("./"))
-	mux.Handle("/f/", http.StripPrefix("/f", fileServer))
-	mux.HandleFunc("/", HelloServer)
-	mux.HandleFunc("/hello", HelloServer)
-	mux.HandleFunc("/cmd_fore", cmd_foreground)
-	mux.HandleFunc("/cmd_back", cmd_background)
-	mux.HandleFunc("/cmd_backc", cmd_background_check)
-	mux.HandleFunc("/upd_script", upd_script)
-	mux.HandleFunc("/getlog", getlog)
-
-	err = http.ListenAndServe(":"+strconv.Itoa(conf.Port), mux)
-//    err := http.ListenAndServeTLS(":443", "server.crt", "server.key", nil)
-	if err != nil {
-		panic("ListenAndServe: ")
-		}
+	do_main(conf)
 }

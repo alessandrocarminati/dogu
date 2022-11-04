@@ -32,6 +32,7 @@ type configuration struct {
 	Host		string
 	Target		string
 	Request_dom	string
+	Daemon		bool
 	Port		int
 	cmdlineNeeds    map[string] bool
 }
@@ -41,6 +42,7 @@ var	Default_config  configuration = configuration{
 	Host:		"https://localtunnel.me",
 	Target:		"localhost",
 	Request_dom:	"",
+	Daemon:		false,
 	Port:		8080,
 	cmdlineNeeds:   map[string] bool{},
 	}
@@ -64,8 +66,14 @@ func cmd_line_item_init() ([]cmd_line_items){
 	push_cmd_line_item("-r", "Specifies request domain",			true,  true,	func_dom,	&res)
 	push_cmd_line_item("-p", "Specifies http service local port",		true,  false,	func_port,	&res)
 	push_cmd_line_item("-j", "Specifies config file",			true,  false,	func_jconf,	&res)
+	push_cmd_line_item("-d", "Demonize (linux)",				false,  false,	func_daemon,	&res)
 
 	return res
+}
+
+func func_daemon	(conf *configuration,fn []string)		(error){
+	(*conf).Daemon=true
+	return nil
 }
 
 func func_help		(conf *configuration,fn []string)		(error){
