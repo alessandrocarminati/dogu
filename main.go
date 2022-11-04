@@ -6,10 +6,12 @@ import (
 	"strings"
 	"os/exec"
 	"os"
+	logx "log"
 	"fmt"
 	"runtime"
 	b64 "encoding/base64"
 	lt "github.com/jweslley/localtunnel"
+	"github.com/sevlyar/go-daemon"
 )
 
 var (
@@ -116,6 +118,17 @@ func main() {
 	conf_subdomain:="antani"
 	conf_port:=8080
 */
+	cntxt := &daemon.Context{
+		PidFileName: "dogu.pid",
+		PidFilePerm: 0644,
+		LogFileName: "dogu.log",
+		LogFilePerm: 0640,
+		WorkDir:     "./",
+		Umask:       027,
+		Args:        os.Args,
+		}
+
+
 
 	conf, err := args_parse(cmd_line_item_init())
 	if err!=nil {
@@ -126,10 +139,21 @@ func main() {
 		os.Exit(-1)
 		}
 
+	d, err := cntxt.Reborn()
+	if err != nil {
+		logx.Fatal("Unable to run: ", err)
+		}
+
+	if d != nil {
+		fmt.Println("dogu started")
+		return
+		}
+	defer cntxt.Release()
+
 	c := lt.NewClient(conf.Host)
 	t := c.NewTunnel(conf.Target, conf.Port)
 	t.OpenAs(conf.Request_dom)
-	fmt.Printf("your url is: %s\n", t.URL())
+	logx.Printf("your url is: %s\n", t.URL())
 
 	mux := http.NewServeMux()
 	fileServer := http.FileServer(http.Dir("./"))
