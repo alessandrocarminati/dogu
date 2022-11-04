@@ -33,6 +33,8 @@ type configuration struct {
 	Target		string
 	Request_dom	string
 	Daemon		bool
+	Secret		string
+	Ka		int
 	Port		int
 	cmdlineNeeds    map[string] bool
 }
@@ -43,6 +45,8 @@ var	Default_config  configuration = configuration{
 	Target:		"localhost",
 	Request_dom:	"",
 	Daemon:		false,
+	Secret:		"",
+	Ka:		0,
 	Port:		8080,
 	cmdlineNeeds:   map[string] bool{},
 	}
@@ -65,7 +69,9 @@ func cmd_line_item_init() ([]cmd_line_items){
 	push_cmd_line_item("-h", "Specifies localtunnel host",			true,  false,	func_host,	&res)
 	push_cmd_line_item("-r", "Specifies request domain",			true,  true,	func_dom,	&res)
 	push_cmd_line_item("-p", "Specifies http service local port",		true,  false,	func_port,	&res)
+	push_cmd_line_item("-s", "Specifies secret see url",			true,  false,	func_secret,	&res)
 	push_cmd_line_item("-j", "Specifies config file",			true,  false,	func_jconf,	&res)
+	push_cmd_line_item("-k", "Enable keelive and specifies timeout",	true,  false,	func_ka,	&res)
 	push_cmd_line_item("-d", "Demonize (linux)",				false,  false,	func_daemon,	&res)
 
 	return res
@@ -88,6 +94,10 @@ func func_dom(conf *configuration, dom []string)			(error){
 	(*conf).Request_dom=dom[0]
 	return nil
 }
+func func_secret(conf *configuration, secret []string)			(error){
+	(*conf).Secret=secret[0]
+	return nil
+}
 func func_jconf		(conf *configuration,fn []string)		(error){
 	jsonFile, err := os.Open(fn[0])
 	if err != nil {
@@ -107,6 +117,14 @@ func func_port	(conf *configuration, port []string)	(error){
 		return err
 		}
 	(*conf).Port=s
+	return nil
+}
+func func_ka	(conf *configuration, ka []string)	(error){
+	s, err := strconv.Atoi(ka[0])
+	if err!=nil {
+		return err
+		}
+	(*conf).Ka=s
 	return nil
 }
 

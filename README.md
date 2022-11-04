@@ -15,6 +15,8 @@ If another go supported target is needed, GOLANG env variables can be overridden
 ```
 $ make GOOS=windows
 GOARCH="amd64" GOOS=windows go build
+$ make mipsle GOMIPS=softfloat 
+GOARCH=mipsle GOOS="linux" go build
 ```
 
 # usage
